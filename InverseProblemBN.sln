@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "InverseProblemBN", "InverseProblemBN.csproj", "{77E63CA7-56EB-467A-A25F-7A97C35696AA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{77E63CA7-56EB-467A-A25F-7A97C35696AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77E63CA7-56EB-467A-A25F-7A97C35696AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77E63CA7-56EB-467A-A25F-7A97C35696AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77E63CA7-56EB-467A-A25F-7A97C35696AA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9010A8B4-B744-4734-9373-AD17E31F00DA}
+	EndGlobalSection
+EndGlobal
