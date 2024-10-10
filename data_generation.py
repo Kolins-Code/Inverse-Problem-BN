@@ -13,6 +13,7 @@ grid_x = np.linspace(0, end_x, size_x + 1)
 grid_t = np.linspace(0, end_t, size_t + 1)
 
 start_func = np.sin(2 * grid_x)
+print(start_func)
 
 '''solution = np.zeros(size_x * size_t)
 matrix = np.zeros(((size_x + 1) * (size_t + 1), (size_x + 1) * (size_t + 1)))

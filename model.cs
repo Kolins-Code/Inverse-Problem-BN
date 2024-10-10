@@ -17,6 +17,7 @@ double end_x = Math.PI;
 double end_t = 1;
 int size_x = (int) (end_x / dx);
 int size_t = (int) (end_t / dt);
+Console.WriteLine(size_t);
 
 double gamma = dt / (dx * dx);
 Console.WriteLine(gamma);
@@ -36,17 +37,19 @@ while (!reader.EndOfStream && k < size_x + 1)
 reader.Close();
 
 
+size_t = 100;
 Range grid_x = new Range(size_x + 1).Named("Сетка по x");
-Range grid_t = new Range(size_t).Named("Сетка по t");
-Range grid_tt = new Range(size_t - 1).Named("");
 
-VariableArray2D<double> solution = Variable.Array<double>(grid_x, grid_tt).Named("Решение прямой задачи");
-VariableArray<double> start_function = Variable.Array<double>(grid_x).Named("Начальное условие");
+VariableArray<double>[] solution = new VariableArray<double>[size_t + 1];
+for (int i = 0; i < solution.Length; i++)
+{
+    solution[i] = Variable.Array<double>(grid_x).Named("Решение прямой задачи, слой " + i);
+}
+solution[0][grid_x] = Variable.GaussianFromMeanAndVariance(0, 100).ForEach(grid_x);
+//VariableArray2D<double> solution = Variable.Array<double>(grid_x, grid_tt).Named("Решение прямой задачи");
+/*VariableArray<double> start_function = Variable.Array<double>(grid_x).Named("Начальное условие");
 start_function[grid_x] = Variable.GaussianFromMeanAndVariance(0, 100).ForEach(grid_x);
-VariableArray<double> end_function = Variable.Array<double>(grid_x).Named("Наблюдение");
-
-Range iterations_x = new Range(size_x - 1).Named("Итерации по внутренним точкам x");
-Range iterations_t = new Range(size_t - 2).Named("Итерации по внутренним точкам t");
+VariableArray<double> end_function = Variable.Array<double>(grid_x).Named("Наблюдение");*/
 
 /*for (int i = 0; i < size_t - 1; i++)
 {
@@ -71,44 +74,23 @@ for (int i = 0; i < size_x - 1; i++)
 {
     end_function[i + 1] = (1 - 2 * gamma) * solution[i + 1, size_t - 2] + gamma * (solution[i, size_t - 2] + solution[i + 2, size_t - 2]);
 }*/
-using (ForEachBlock t = Variable.ForEach(grid_t))
+for (int t = 1; t <= size_t; t++)
 {
     using (ForEachBlock x = Variable.ForEach(grid_x))
     {
         using (Variable.If(x.Index == 0)) 
         {
-            using (Variable.IfNot(t.Index == size_t - 1)) 
-            {
-                solution[x.Index, t.Index] = 0;
-            }
+            solution[t][x.Index] = Variable.GaussianFromMeanAndPrecision(0, Double.PositiveInfinity);
         }
         using (Variable.IfNot(x.Index == 0)) 
         {
             using (Variable.If(x.Index == size_x)) 
             {
-                using (Variable.IfNot(t.Index == size_t - 1)) 
-                {
-                    solution[x.Index, t.Index] = 0;
-                }
+                solution[t][x.Index] = Variable.GaussianFromMeanAndPrecision(0, Double.PositiveInfinity);
             }
             using (Variable.IfNot(x.Index == size_x)) 
             {
-                /*using (Variable.If(t.Index == 0)) 
-                {
-                    solution[x.Index, 0] =  0/*(1 - 2 * gamma) * start_function[x.Index] + gamma * (start_function[x.Index - 1] + start_function[x.Index + 1]);
-                }*/
-                using (Variable.IfNot(t.Index == 0)) 
-                {
-                    using (Variable.If(t.Index == size_t - 1)) 
-                    {
-                        end_function[x.Index] = (1 - 2 * gamma) * solution[x.Index, t.Index - 1] + gamma * (solution[x.Index - 1, t.Index - 1] + solution[x.Index + 1, t.Index - 1]);
-                    }
-                    using (Variable.IfNot(t.Index == size_t - 1)) 
-                    {
-                        solution[x.Index, t.Index] = (1 - 2 * gamma) * solution[x.Index, t.Index - 1] + gamma * (solution[x.Index - 1, t.Index - 1] + solution[x.Index + 1, t.Index - 1]);
-                    }
-                    
-                }
+                solution[t][x.Index] = ((1 - gamma) * solution[t - 1][x.Index] + 0.5 * gamma * (solution[t][x.Index - 1] + solution[t][x.Index + 1]) +  0.5 * gamma * (solution[t - 1][x.Index - 1] + solution[t - 1][x.Index + 1])) / (1 + gamma);
             }
             
         }
@@ -116,16 +98,16 @@ using (ForEachBlock t = Variable.ForEach(grid_t))
 }
 
 
-end_function.ObservedValue = end_function_obs;
+solution[size_t].ObservedValue = end_function_obs;
 
 
 InferenceEngine engine = new InferenceEngine();
 //engine.Compiler.CompilerChoice = CompilerChoice.Roslyn;
 //engine.SaveFactorGraphToFolder = "graphs";
-engine.NumberOfIterations = 50;
+engine.NumberOfIterations = 1000;
 
 
 double[] prediction = new double[size_x + 1];
 
-Console.WriteLine(engine.Infer<DistributionStructArray<Gaussian, double>>(solution));
+Console.WriteLine(engine.Infer<DistributionStructArray<Gaussian, double>>(solution[0]));
 
