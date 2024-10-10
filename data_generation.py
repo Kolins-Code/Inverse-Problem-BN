@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
 
-dt = 0.2
-dx = 0.5
+dt = 0.01
+dx = 0.1
 end_x = np.pi
 end_t = 1
 size_x = (int) (end_x / dx)
