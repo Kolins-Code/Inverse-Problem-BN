@@ -11,10 +11,10 @@ using System.Diagnostics;
 
 const string NAME = "data.csv";
 
-double dt = 0.01;
+double dt = 0.001;
 double dx = 0.1;
 double end_x = Math.PI;
-double end_t = 1;
+double end_t = 0.01;
 int size_x = (int) (end_x / dx);
 int size_t = (int) (end_t / dt);
 Console.WriteLine(size_t);
@@ -31,49 +31,32 @@ while (!reader.EndOfStream && k < size_x + 1)
 {
     var line = reader.ReadLine();
     end_function_obs[k] = Convert.ToDouble(line, new CultureInfo("en-EN"));
-    //Console.WriteLine(end_function_obs[k]);
+    Console.WriteLine(end_function_obs[k]);
     k++;
 }
 reader.Close();
 
 
-size_t = 100;
 Range grid_x = new Range(size_x + 1).Named("Сетка по x");
 
 VariableArray<double>[] solution = new VariableArray<double>[size_t + 1];
+VariableArray<double> means = Variable.Array<double>(grid_x).Named("Средние");
+VariableArray<double> precisions = Variable.Array<double>(grid_x).Named("Обратные дисперсии");
+means[grid_x] = Variable.GaussianFromMeanAndVariance(0, 100).ForEach(grid_x);
+precisions[grid_x] = Variable.GammaFromShapeAndScale(1, 1).ForEach(grid_x);
+
 for (int i = 0; i < solution.Length; i++)
 {
     solution[i] = Variable.Array<double>(grid_x).Named("Решение прямой задачи, слой " + i);
 }
-solution[0][grid_x] = Variable.GaussianFromMeanAndVariance(0, 100).ForEach(grid_x);
-//VariableArray2D<double> solution = Variable.Array<double>(grid_x, grid_tt).Named("Решение прямой задачи");
-/*VariableArray<double> start_function = Variable.Array<double>(grid_x).Named("Начальное условие");
-start_function[grid_x] = Variable.GaussianFromMeanAndVariance(0, 100).ForEach(grid_x);
-VariableArray<double> end_function = Variable.Array<double>(grid_x).Named("Наблюдение");*/
-
-/*for (int i = 0; i < size_t - 1; i++)
+for (int i = 1; i < size_x; i++)
 {
-    solution[0, i] = 0;
-    solution[size_x, i] = 0;
+    solution[0][i] = Variable.GaussianFromMeanAndPrecision(0, 0.01);
+    //solution[0][i] = Variable.GaussianFromMeanAndPrecision(means[i], precisions[i]);
 }
+solution[0][0] = Variable.GaussianFromMeanAndPrecision(0, Double.PositiveInfinity);
+solution[0][size_x] = Variable.GaussianFromMeanAndPrecision(0, Double.PositiveInfinity);
 
-for (int i = 0; i < size_x - 1; i++)
-{
-    solution[i + 1, 0] = (1 - 2 * gamma) * start_function[i + 1] + gamma * (start_function[i] + start_function[i + 2]);
-}
-
-for (int n = 0; n < size_t - 2; n++)
-{
-    for (int i = 0; i < size_x - 1; i++)
-    {
-        solution[i + 1, n + 1] = (1 - 2 * gamma) * solution[i + 1, n] + gamma * (solution[i, n] + solution[i + 2, n]);
-    }
-}
-
-for (int i = 0; i < size_x - 1; i++)
-{
-    end_function[i + 1] = (1 - 2 * gamma) * solution[i + 1, size_t - 2] + gamma * (solution[i, size_t - 2] + solution[i + 2, size_t - 2]);
-}*/
 for (int t = 1; t <= size_t; t++)
 {
     using (ForEachBlock x = Variable.ForEach(grid_x))
@@ -90,7 +73,7 @@ for (int t = 1; t <= size_t; t++)
             }
             using (Variable.IfNot(x.Index == size_x)) 
             {
-                solution[t][x.Index] = ((1 - gamma) * solution[t - 1][x.Index] + 0.5 * gamma * (solution[t][x.Index - 1] + solution[t][x.Index + 1]) +  0.5 * gamma * (solution[t - 1][x.Index - 1] + solution[t - 1][x.Index + 1])) / (1 + gamma);
+                solution[t][x.Index] = (1 - 2 * gamma) * solution[t - 1][x.Index] + gamma * (solution[t - 1][x.Index - 1] + solution[t - 1][x.Index + 1])  ;
             }
             
         }
@@ -102,12 +85,12 @@ solution[size_t].ObservedValue = end_function_obs;
 
 
 InferenceEngine engine = new InferenceEngine();
-//engine.Compiler.CompilerChoice = CompilerChoice.Roslyn;
-//engine.SaveFactorGraphToFolder = "graphs";
-engine.NumberOfIterations = 1000;
+engine.SaveFactorGraphToFolder = "graphs";
+engine.NumberOfIterations = 200;
 
 
 double[] prediction = new double[size_x + 1];
 
 Console.WriteLine(engine.Infer<DistributionStructArray<Gaussian, double>>(solution[0]));
-
+//Console.WriteLine(engine.Infer<DistributionStructArray<Gaussian, double>>(means));
+//Console.WriteLine(engine.Infer<DistributionStructArray<Gamma, double>>(precisions));
