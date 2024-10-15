@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
 
-dt = 0.001
+dt = 0.01
 dx = 0.1
 end_x = np.pi
-end_t = 0.01
+end_t = 0.2
 size_x = (int) (end_x / dx)
 size_t = (int) (end_t / dt)
 

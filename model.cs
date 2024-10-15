@@ -11,10 +11,10 @@ using System.Diagnostics;
 
 const string NAME = "data.csv";
 
-double dt = 0.001;
+double dt = 0.01;
 double dx = 0.1;
 double end_x = Math.PI;
-double end_t = 0.01;
+double end_t = 0.2;
 int size_x = (int) (end_x / dx);
 int size_t = (int) (end_t / dt);
 Console.WriteLine(size_t);
@@ -73,7 +73,7 @@ for (int t = 1; t <= size_t; t++)
             }
             using (Variable.IfNot(x.Index == size_x)) 
             {
-                solution[t][x.Index] = (1 - 2 * gamma) * solution[t - 1][x.Index] + gamma * (solution[t - 1][x.Index - 1] + solution[t - 1][x.Index + 1])  ;
+                solution[t][x.Index] = (solution[t - 1][x.Index] + gamma * (solution[t][x.Index - 1] + solution[t][x.Index + 1])) / (1 + 2 * gamma) ;
             }
             
         }
@@ -86,7 +86,7 @@ solution[size_t].ObservedValue = end_function_obs;
 
 InferenceEngine engine = new InferenceEngine();
 engine.SaveFactorGraphToFolder = "graphs";
-engine.NumberOfIterations = 200;
+engine.NumberOfIterations = 50;
 
 
 double[] prediction = new double[size_x + 1];
