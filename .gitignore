@@ -9,3 +9,10 @@ x64/
 
 venv/
 *.csv
+GeneratedSource/
+graphs/
+__pycache__/
+Runs/test_run
+input/
+output/
+val/
