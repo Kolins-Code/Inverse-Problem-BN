@@ -5,13 +5,13 @@ STEP_T = 0.01
 STEP_X = 0.01
 
 END_X = 1
-END_T = 0.06
+END_T = 0.07
 
 FUNC_GENERATOR = window_func
 
 IS_SINGLE_RUN = True
 
-EXPERIMENT_INFO = "OLOLO"
+EXPERIMENT_INFO = "Эксперимент с прямоугольной функцией на 8 временных слоях с неявной схемой, т. е. добавил всего один слой от предыдущего запуска."
 
 
 datafile_name = "data"
