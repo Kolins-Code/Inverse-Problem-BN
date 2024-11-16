@@ -7,11 +7,11 @@ STEP_X = 0.01
 END_X = 1
 END_T = 0.07
 
-FUNC_GENERATOR = window_func
+FUNC_GENERATOR = window_func2
 
 IS_SINGLE_RUN = True
 
-EXPERIMENT_INFO = "Тестирование переписанной полностью на массивах Infer.Net модели с прямоугольной функцией на 8 временных слоях."
+EXPERIMENT_INFO = "Добавил условие на 0. Сдвинул функцию. Тест на 8 слоях."
 
 
 datafile_name = "data"

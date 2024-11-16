@@ -17,6 +17,7 @@ class Model
 {
     static void Main(string[] args)
     {
+        
         var culture_param = new CultureInfo("en-EN");
 
         double dt = Convert.ToDouble(args[0], culture_param);
@@ -50,6 +51,10 @@ class Model
         VariableArray<double> start_function = Variable.Array<double>(grid_x).Named("Начальное условие");
         VariableArray<double> end_function = Variable.Observed(end_function_obs);
 
+        VariableArray<double> means = Variable.Array<double>(grid_t);
+        VariableArray<double> precisions = Variable.Array<double>(grid_t);
+        means[grid_t] = Variable.GaussianFromMeanAndVariance(0, 100).ForEach(grid_t);
+        precisions[grid_t] = Variable.GammaFromShapeAndScale(1, 1).ForEach(grid_t);;
 
         using (ForEachBlock x = Variable.ForEach(grid_x))
         {
@@ -57,28 +62,40 @@ class Model
             {
                 var left_cond = x.Index == 0 | x.Index == size_x;
                 //var right_cond = x.Index == size_x;
-                var start_cond = t.Index == 0;
+                /*var start_cond = t.Index == 0;
                 var end_cond = t.Index == size_t;
-                var t_bounds = start_cond | end_cond;
-
-                using (Variable.If(left_cond)) 
+                var t_bounds = start_cond | end_cond;*/
+                solution[t.Index][x.Index] = Variable.GaussianFromMeanAndPrecision(0, 0.01);
+                /*using (Variable.If(left_cond)) 
                 {
-                    //solution[t.Index][x.Index] = Variable.GaussianFromMeanAndPrecision(0, Double.PositiveInfinity);
-                    using (Variable.IfNot(end_cond)) 
+                    solution[t.Index][x.Index] = Variable.GaussianFromMeanAndVariance(0, 0.00001);
+                    /*using (Variable.IfNot(end_cond)) 
                     {
                         solution[t.Index][x.Index] = Variable.GaussianFromMeanAndPrecision(0, Double.PositiveInfinity);
                     }
                 }
                 using (Variable.IfNot(left_cond)) 
                 {
-                    using (Variable.If(start_cond)) 
-                    {
-                        solution[t.Index][x.Index] = Variable.GaussianFromMeanAndVariance(0, 100);
-                      
-                    }
+                    solution[t.Index][x.Index] = Variable.GaussianFromMeanAndPrecision(means[t.Index], precisions[t.Index]);
+                    
+                }*/
+            }  
+        }
+
+        using (ForEachBlock x = Variable.ForEach(grid_x))
+        {
+            using (ForEachBlock t = Variable.ForEach(grid_t))
+            {
+                var left_cond = x.Index == 0 | x.Index == size_x;
+                var start_cond = t.Index == 0;
+                using (Variable.If(left_cond)) 
+                {
+                    Variable.ConstrainEqual(solution[t.Index][x.Index], 0);
+                }
+                using (Variable.IfNot(left_cond)) 
+                {
                     using (Variable.IfNot(start_cond)) 
                     {
-                        solution[t.Index][x.Index] = Variable.GaussianFromMeanAndVariance(0, 100);
                         var tmp1 = (solution[t.Index][x.Index - 1] + solution[t.Index][x.Index + 1]).Named("tmp1");
                         var tmp2 = (gamma * tmp1).Named("tmp2");
                         var tmp3 = (solution[t.Index - 1][x.Index] + tmp2).Named("tmp3");
@@ -94,7 +111,7 @@ class Model
                     
                     
                 }
-            }  
+            }
         }
 
         using (ForEachBlock x = Variable.ForEach(grid_x))
@@ -112,8 +129,14 @@ class Model
         engine.NumberOfIterations = 50;
         //engine.Compiler.BrowserMode = BrowserMode.Always;
 
+        
+        var prediction_mean = engine.Infer(means);
+        var prediction_prec = engine.Infer(precisions);
+        Console.WriteLine(prediction_mean);
+        Console.WriteLine(prediction_prec);
+        Console.WriteLine(engine.Infer(solution));
+
         var prediction = engine.Infer<DistributionStructArray<Gaussian, double>>(start_function);
-        Console.WriteLine(prediction);
         double[] output_function = new double[size_x + 1];
         int index = 0;
         foreach (var point in prediction)
