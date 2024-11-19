@@ -1,17 +1,17 @@
 from start_func_generation import *
 
 
-STEP_T = 0.01
+STEP_T = 0.0001
 STEP_X = 0.01
 
 END_X = 1
-END_T = 0.07
+END_T = 0.0002
 
 FUNC_GENERATOR = window_func2
 
 IS_SINGLE_RUN = True
 
-EXPERIMENT_INFO = "Добавил условие на 0. Сдвинул функцию. Тест на 8 слоях."
+EXPERIMENT_INFO = "Поменял на явную схему. Сдвинул функцию. Тест на 3 слоях."
 
 
 datafile_name = "data"

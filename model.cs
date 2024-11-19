@@ -47,7 +47,8 @@ class Model
         Range grid_x = new Range(size_x + 1).Named("Сетка по x");
         Range grid_t = new Range(size_t + 1).Named("Сетка по t");
         
-        VariableArray<VariableArray<double>,double[][]> solution = Variable.Array(Variable.Array<double>(grid_x), grid_t).Named("Решение прямой задачи");
+        VariableArray2D<double> solution = Variable.Array<double>(grid_t, grid_x);
+        //VariableArray<VariableArray<double>,double[][]> solution = Variable.Array(Variable.Array<double>(grid_x), grid_t).Named("Решение прямой задачи");
         VariableArray<double> start_function = Variable.Array<double>(grid_x).Named("Начальное условие");
         VariableArray<double> end_function = Variable.Observed(end_function_obs);
 
@@ -65,15 +66,15 @@ class Model
                 /*var start_cond = t.Index == 0;
                 var end_cond = t.Index == size_t;
                 var t_bounds = start_cond | end_cond;*/
-                solution[t.Index][x.Index] = Variable.GaussianFromMeanAndPrecision(0, 0.01);
+                solution[t.Index, x.Index] = Variable.GaussianFromMeanAndPrecision(0, 0.01);
                 /*using (Variable.If(left_cond)) 
                 {
                     solution[t.Index][x.Index] = Variable.GaussianFromMeanAndVariance(0, 0.00001);
                     /*using (Variable.IfNot(end_cond)) 
                     {
                         solution[t.Index][x.Index] = Variable.GaussianFromMeanAndPrecision(0, Double.PositiveInfinity);
-                    }
-                }
+                    }*/
+                /*}
                 using (Variable.IfNot(left_cond)) 
                 {
                     solution[t.Index][x.Index] = Variable.GaussianFromMeanAndPrecision(means[t.Index], precisions[t.Index]);
@@ -90,17 +91,21 @@ class Model
                 var start_cond = t.Index == 0;
                 using (Variable.If(left_cond)) 
                 {
-                    Variable.ConstrainEqual(solution[t.Index][x.Index], 0);
+                    //Variable.ConstrainEqual(solution[t.Index, x.Index], 0);
                 }
                 using (Variable.IfNot(left_cond)) 
                 {
                     using (Variable.IfNot(start_cond)) 
                     {
-                        var tmp1 = (solution[t.Index][x.Index - 1] + solution[t.Index][x.Index + 1]).Named("tmp1");
+                        /*var tmp1 = (solution[t.Index][x.Index - 2] + solution[t.Index][x.Index]).Named("tmp1");
                         var tmp2 = (gamma * tmp1).Named("tmp2");
-                        var tmp3 = (solution[t.Index - 1][x.Index] + tmp2).Named("tmp3");
+                        var tmp3 = (solution[t.Index - 1][x.Index - 1] + tmp2).Named("tmp3");*/
                         //solution[t.Index][x.Index] = tmp3 / (1 + 2 * gamma);
-                        Variable.ConstrainEqual(solution[t.Index][x.Index], tmp3 / (1 + 2 * gamma));
+                        //Variable.ConstrainEqual(solution[t.Index][x.Index - 1], tmp3 / (1 + 2 * gamma));
+                        var tmp1 = (solution[t.Index - 1, x.Index - 1] + solution[t.Index - 1, x.Index + 1]).Named("tmp1");
+                        var tmp2 = (gamma * tmp1).Named("tmp2");
+                        var tmp3 = ((1 - 2 * gamma) * solution[t.Index - 1, x.Index]).Named("tmp3");
+                        Variable.ConstrainEqual(solution[t.Index, x.Index], tmp2 + tmp3);
                         //solution[t.Index][x.Index] = (solution[t.Index - 1][x.Index] + gamma * (solution[t.Index][x.Index - 1] + solution[t.Index][x.Index + 1])) / (1 + 2 * gamma) ;
                         //solution[t.Index][x.Index] = ((1 + 2 * gamma) * solution[t.Index][x.Index - 1] - solution[t.Index - 1][x.Index - 1] - gamma * solution[t.Index][x.Index - 2]) / gamma;
                         /*var tmp1 = ((1 + 2 * gamma) * solution[t.Index][x.Index - 1]).Named("tmp1");
@@ -116,17 +121,17 @@ class Model
 
         using (ForEachBlock x = Variable.ForEach(grid_x))
         {
-            end_function[x.Index] = solution[size_t][x.Index];
+            end_function[x.Index] = solution[size_t, x.Index];
         }
         using (ForEachBlock x = Variable.ForEach(grid_x))
         {
-            start_function[x.Index] = solution[0][x.Index];
+            start_function[x.Index] = solution[0, x.Index];
         }
 
 
         InferenceEngine engine = new InferenceEngine();
         engine.SaveFactorGraphToFolder = "graphs";
-        engine.NumberOfIterations = 50;
+        engine.NumberOfIterations = 2000;
         //engine.Compiler.BrowserMode = BrowserMode.Always;
 
         
@@ -134,7 +139,7 @@ class Model
         var prediction_prec = engine.Infer(precisions);
         Console.WriteLine(prediction_mean);
         Console.WriteLine(prediction_prec);
-        Console.WriteLine(engine.Infer(solution));
+        //Console.WriteLine(engine.Infer(solution));
 
         var prediction = engine.Infer<DistributionStructArray<Gaussian, double>>(start_function);
         double[] output_function = new double[size_x + 1];
