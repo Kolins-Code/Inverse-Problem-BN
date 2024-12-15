@@ -1,17 +1,18 @@
 from start_func_generation import *
 
 
-STEP_T = 0.0001
 STEP_X = 0.01
+STEP_T = 0.0005 #STEP_X ** 2 / 2
+
 
 END_X = 1
-END_T = 0.0002
+END_T = 0.01 #STEP_T * 50
 
-FUNC_GENERATOR = window_func2
+FUNC_GENERATOR = normal_dist_func
 
 IS_SINGLE_RUN = True
 
-EXPERIMENT_INFO = "Поменял на явную схему. Сдвинул функцию. Тест на 3 слоях."
+EXPERIMENT_INFO = "Модель с VMP на основе условий на сетку через ConstrainEqualRandom. Тест на 20 слоях с dt=0.005"
 
 
 datafile_name = "data"

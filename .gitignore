@@ -16,3 +16,6 @@ Runs/test_run
 input/
 output/
 val/
+input.svg
+prediction.svg
+solution.svg
