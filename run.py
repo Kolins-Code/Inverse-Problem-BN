@@ -5,6 +5,7 @@ import shutil
 import json
 from params import *
 from data_generation import *
+from tiknonov_regularization import *
 
 
 print("Writing Info File...")
@@ -14,6 +15,7 @@ os.mkdir(dir_name)
 os.mkdir(dir_name + input_dir)
 os.mkdir(dir_name + output_dir)
 os.mkdir(dir_name + val_dir)
+os.mkdir(dir_name + reg_dir)
 info = {
     "STEP_T": STEP_T,
     "STEP_X": STEP_X,
@@ -29,9 +31,19 @@ infofile.close()
 
 print("Generating functions for validation...")
 if IS_SINGLE_RUN:
-    generate_single(STEP_T, STEP_X, END_T, END_X, FUNC_GENERATOR, 
+    generate_single(STEP_T / 10, STEP_X, END_T, END_X, FUNC_GENERATOR, 
                     dir_name + input_dir + datafile_name + datafile_format,
                     dir_name + val_dir + datafile_name + datafile_format)
+    #generate_harmonic(STEP_T, STEP_X, END_T, END_X, FUNC_GENERATOR, 
+    #                  dir_name + input_dir + datafile_name + datafile_format,
+    #                  dir_name + val_dir + datafile_name + datafile_format,
+    #                  10)
+
+print("Running regularization model...")
+solver = RegularizationSolver(STEP_T, STEP_X, END_T, END_X, ERROR_REG,
+                              dir_name + input_dir + datafile_name + datafile_format,
+                              dir_name + reg_dir + datafile_name + datafile_format)
+solver.solve()
 
 def execute(cmd):
     popen = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, shell=True)

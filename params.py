@@ -2,13 +2,15 @@ from start_func_generation import *
 
 
 STEP_X = 0.01
-STEP_T = 0.0005 #STEP_X ** 2 / 2
+STEP_T = 0.00001 #STEP_X ** 2 / 2
 
 
 END_X = 1
-END_T = 0.01 #STEP_T * 50
+END_T = 0.0001 #STEP_T * 50
 
-FUNC_GENERATOR = normal_dist_func
+ERROR_REG = 1.e-4
+
+FUNC_GENERATOR = window_func3
 
 IS_SINGLE_RUN = True
 
@@ -21,3 +23,4 @@ infofile_name = "info.json"
 input_dir = "input/"
 output_dir = "output/"
 val_dir = "val/"
+reg_dir = "reg/"
