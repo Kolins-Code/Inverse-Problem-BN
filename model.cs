@@ -17,7 +17,7 @@ class Model
 {
     static void Main(string[] args)
     {
-       
+        //args = new[]{"0.0001", "0.01", "0.0002", "1", "D:/Programming/InverseProblemBN/Runs/run 19.11.24 - 11.27.49/input/data.csv", "D:/Programming/InverseProblemBN/Runs/run 19.11.24 - 11.27.49/output/data.csv"};
         var culture_param = new CultureInfo("en-EN");
 
         double dt = Convert.ToDouble(args[0], culture_param);
@@ -82,12 +82,12 @@ class Model
                 var bounds_cond = x.Index == 0 | x.Index == size_x;
                 using (Variable.If(bounds_cond)) 
                 {
-                    Variable.ConstrainEqualRandom(solution[t][x.Index], Gaussian.FromMeanAndVariance(0, 0.01));
+                    Variable.ConstrainEqualRandom(solution[t][x.Index], Gaussian.FromMeanAndVariance(0, 0.0001));
                 }
                 using (Variable.IfNot(bounds_cond)) 
                 {
                     
-                    Variable.ConstrainEqualRandom(solution[t][x.Index] - (1 + 2 * gamma) * solution[t + 1][x.Index] + gamma * (solution[t + 1][x.Index - 1] + solution[t + 1][x.Index + 1]), Gaussian.FromMeanAndVariance(0, 0.01));
+                    Variable.ConstrainEqualRandom(solution[t][x.Index] - (1 + 2 * gamma) * solution[t + 1][x.Index] + gamma * (solution[t + 1][x.Index - 1] + solution[t + 1][x.Index + 1]), Gaussian.FromMeanAndVariance(0, 1e-10));
                     
                 }
             }  
@@ -96,6 +96,7 @@ class Model
         using (ForEachBlock x = Variable.ForEach(grid_x))
         {
             end_function[x.Index] = solution[size_t][x.Index];
+            //Variable.ConstrainEqualRandom(end_function[x.Index] - solution[size_t][x.Index], Gaussian.FromMeanAndVariance(0, 0.01)); 
         }
         using (ForEachBlock x = Variable.ForEach(grid_x))
         {
@@ -105,13 +106,13 @@ class Model
         InferenceEngine engine = new InferenceEngine(new VariationalMessagePassing());
         engine.SaveFactorGraphToFolder = "graphs";
         engine.Compiler.UseParallelForLoops = true;
-        engine.NumberOfIterations = 100000;
+        engine.NumberOfIterations = 500000;
 
         for (int i = 0; i < size_t_big / size_t; i++)
         {
             end_function.ObservedValue = end_function_obs;
             var prediction_loc = engine.Infer<DistributionStructArray<Gaussian, double>>(start_function);
-            Console.WriteLine(engine.Infer(precisions));
+            //Console.WriteLine(engine.Infer(precisions));
            
             Console.WriteLine(prediction_loc);
             int index_loc = 0;
